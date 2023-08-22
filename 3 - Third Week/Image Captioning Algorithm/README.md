@@ -17,11 +17,10 @@ This project involves using a neural network model to automatically caption imag
 - **os, json, re, time, collections, random, pickle**: Various utility libraries for file handling, regular expressions, timing, data structures, randomness, and serialization.
 
 ## How to Run
-1. Clone the repository.
-2. Install the required libraries.
-3. Run the script using your preferred IDE or command line.
-4. Adjust global variables and parameters if needed.
-5. Run the `caption_image` method to generate captions for your images.
+1. Install the required libraries.
+2. Ensure that you have the dataset 
+3. Adjust global variables and parameters if needed.
+4. Run the script to generate captions for your images.
 
 ## Input and Output
 - **Input**: Images from the COCO dataset or any compatible image.
