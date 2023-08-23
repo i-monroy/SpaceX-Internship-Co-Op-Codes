@@ -1,4 +1,4 @@
-# Context Bandit MDP Algorithm
+# Evaluation of Image Denoising Algorithm
 
 ## Author
 Isaac Monroy
