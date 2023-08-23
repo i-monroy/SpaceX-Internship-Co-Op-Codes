@@ -1,0 +1,230 @@
+<!-- Dashboard page for Methane and Nitrogen Detection System  -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Set the title of the webpage -->
+    <title>Methane and Nitrogen Detection System Dashboard</title>
+
+    <!-- Include the CSS styles for the webpage -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        h2 {
+            color: #666;
+        }
+        #methane, #nitrogen {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+</head>
+<body>
+
+    <!-- Logout button -->
+    <div style="text-align: right; padding: 10px;">
+        <a href="/logout" style="text-decoration: none; color: #333; background-color: #f2f2f2; padding: 10px; border-radius: 5px;">Logout</a>
+    </div>
+
+    <!-- Page header -->
+    <h1>Methane and Nitrogen Detection System Dashboard</h1>
+
+    <!-- Methane information and statistics -->
+    <div id="methane">
+        <h2>Methane</h2>
+        <p>Most recent reading: <span id="latest-methane">{{ methane_latest }}</span></p>
+        <table id="methane-stats">
+            <tr>
+                <th>Max:</th>
+                <td id="methane-max">{{ methane_stats.max }}</td>
+            </tr>
+            <tr>
+                <th>Min:</th>
+                <td id="methane-min">{{ methane_stats.min }}</td>
+            </tr>
+            <tr>
+                <th>Average:</th>
+                <td id="methane-avg">{{ methane_stats.avg }}</td>
+            </tr>
+            <tr>
+                <th>25th Percentile:</th>
+                <td id="methane-perc-25">{{ methane_stats.perc_25 }}</td>
+            </tr>
+            <tr>
+                <th>Median:</th>
+                <td id="methane-perc-50">{{ methane_stats.perc_50 }}</td>
+            </tr>
+            <tr>
+                <th>75th Percentile:</th>
+                <td id="methane-perc-75">{{ methane_stats.perc_75 }}</td>
+            </tr>
+        </table>
+        <p>Calculated statistics on {{ end_time.strftime('%Y-%m-%d') }} from {{ start_time.strftime('%H:%M:%S') }} to {{ end_time.strftime('%H:%M:%S') }}</p>
+        <div id="methane-plot">
+            <canvas id="methane-chart"></canvas>
+        </div>
+    </div>    
+
+    <!-- Nitrogen information and statistics -->
+    <div id="nitrogen">
+        <h2>Nitrogen</h2>
+        <p>Most recent reading: <span id="latest-nitrogen">{{ nitrogen_latest }}</span></p>
+        <table id="nitrogen-stats">
+            <tr>
+                <th>Max:</th>
+                <td id="nitrogen-max">{{ nitrogen_stats.max }}</td>
+            </tr>
+            <tr>
+                <th>Min:</th>
+                <td id="nitrogen-min">{{ nitrogen_stats.min }}</td>
+            </tr>
+            <tr>
+                <th>Average:</th>
+                <td id="nitrogen-avg">{{ nitrogen_stats.avg }}</td>
+            </tr>
+            <tr>
+                <th>25th Percentile:</th>
+                <td id="nitrogen-perc-25">{{ nitrogen_stats.perc_25 }}</td>
+            </tr>
+            <tr>
+                <th>Median:</th>
+                <td id="nitrogen-perc-50">{{ nitrogen_stats.perc_50 }}</td>
+            </tr>
+            <tr>
+                <th>75th Percentile:</th>
+                <td id="nitrogen-perc-75">{{ nitrogen_stats.perc_75 }}</td>
+            </tr>
+        </table>
+        <p>Calculated statistics on {{ end_time.strftime('%Y-%m-%d') }} from {{ start_time.strftime('%H:%M:%S') }} to {{ end_time.strftime('%H:%M:%S') }}</p>
+        <div id="nitrogen-plot">
+            <canvas id="nitrogen-chart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Javascript for updating the page content -->
+    <script>
+        // Initialize chart variables for Methane and Nitrogen
+        let methaneChart;
+        let nitrogenChart;
+        
+        // Fetch the latest readings and updates the respective parts of the page
+        function updateLatestReading() {
+            fetch('/latest')
+                .then(response => response.json())
+                .then(data => {
+                    // Update the most recent reading part of the page with the new data
+                    document.getElementById('latest-methane').innerText = data.methane;
+                    document.getElementById('latest-nitrogen').innerText = data.nitrogen;
+                });
+        }
+        
+        // Fetch the latest stats and updates the respective parts of the page
+        function updateStatistics() {
+            // Make a request to your server to get the updated statistics
+            fetch('/stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Update the statistics on the page with the new data
+                    document.getElementById('methane-max').innerText = data.methane.max;
+                    document.getElementById('methane-min').innerText = data.methane.min;
+                    document.getElementById('methane-avg').innerText = data.methane.avg;
+                    document.getElementById('methane-perc-25').innerText = data.methane.perc_25;
+                    document.getElementById('methane-perc-50').innerText = data.methane.perc_50;
+                    document.getElementById('methane-perc-75').innerText = data.methane.perc_75;
+                    
+                    document.getElementById('nitrogen-max').innerText = data.nitrogen.max;
+                    document.getElementById('nitrogen-min').innerText = data.nitrogen.min;
+                    document.getElementById('nitrogen-avg').innerText = data.nitrogen.avg;
+                    document.getElementById('nitrogen-perc-25').innerText = data.nitrogen.perc_25;
+                    document.getElementById('nitrogen-perc-50').innerText = data.nitrogen.perc_50;
+                    document.getElementById('nitrogen-perc-75').innerText = data.nitrogen.perc_75;
+                });
+        }
+
+        // Fetch the latest stats and updates or creates the charts on the page
+        function updateCharts() {
+            fetch('/stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Update chart data if chart exists, otherwise create chart
+                    if (methaneChart) {
+                        methaneChart.data.labels = data.timestamps;
+                        methaneChart.data.datasets[0].data = data.methane_data;
+                        methaneChart.update();
+                    } else {
+                        // Create the Methane chart
+                        methaneChart = new Chart(document.getElementById('methane-chart'), {
+                            type: 'line',
+                            data: {
+                                labels: data.timestamps,
+                                datasets: [{
+                                    label: 'Methane Level',
+                                    data: data.methane_data,
+                                    fill: false,
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    tension: 0.1
+                                }]
+                            }
+                        });
+                    }
+
+                    // Create the Nitrogen chart
+                    if (nitrogenChart) {
+                        nitrogenChart.data.labels = data.timestamps;
+                        nitrogenChart.data.datasets[0].data = data.nitrogen_data;
+                        nitrogenChart.update();
+                    } else {
+                        // Create the Nitrogen chart
+                        nitrogenChart = new Chart(document.getElementById('nitrogen-chart'), {
+                            type: 'line',
+                            data: {
+                                labels: data.timestamps,
+                                datasets: [{
+                                    label: 'Nitrogen Level',
+                                    data: data.nitrogen_data,
+                                    fill: false,
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    tension: 0.1
+                                }]
+                            }
+                        });
+                    }
+                });
+        }
+
+        // Fetch the initial data and create charts when the page loads
+        updateLatestReading();
+        updateStatistics();
+        updateCharts();
+
+        // Update latest reading every 10 seconds
+        setInterval(updateLatestReading, 10000);
+
+        // Update statistics every 300 seconds (5 minutes)
+        setInterval(updateStatistics, 300000);
+
+        // Update charts every 300 seconds (5 minutes)
+        setInterval(updateCharts, 300000);
+    </script>    
+
+    </body>
+</html>
